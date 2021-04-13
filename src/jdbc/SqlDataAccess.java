@@ -24,6 +24,7 @@ public class SqlDataAccess {
 	{
 		Connection c = null;
 	      Statement stmt = null;
+	      try {
 		 Class.forName("org.postgresql.Driver");
        c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
        c.setAutoCommit(false);
@@ -55,7 +56,11 @@ public class SqlDataAccess {
 		
         stmt.close();
         c.commit();
-        c.close();
+        c.close(); } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getClass().getName()+": "+e.getMessage());
+            System.exit(0);
+         }
 		
 		
 	}
@@ -64,6 +69,7 @@ public class SqlDataAccess {
 		Scanner sc=new Scanner(System.in);
 		Connection c = null;
 	      Statement stmt = null;
+	      try {
 		 Class.forName("org.postgresql.Driver");
          c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
         c.setAutoCommit(false);
@@ -100,7 +106,11 @@ public class SqlDataAccess {
          pt.executeUpdate();
          stmt.close();
          c.commit();
-         c.close();
+         c.close(); } catch (Exception e) {
+             e.printStackTrace();
+             System.err.println(e.getClass().getName()+": "+e.getMessage());
+             System.exit(0);
+          }
          System.out.println("ACCOUNT CREATED SUCCESSFULLY");
 		
 	}
@@ -165,6 +175,7 @@ public class SqlDataAccess {
 		String m=String.valueOf(formatter.format(date)); 
 		Connection c = null;
 	      Statement stmt = null;
+	      try {
 		 Class.forName("org.postgresql.Driver");
      c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
      c.setAutoCommit(false);
@@ -192,13 +203,19 @@ public class SqlDataAccess {
       rs.close();
       stmt.close();
       c.commit();
-      c.close();
+      c.close(); } catch (Exception e) {
+          e.printStackTrace();
+          System.err.println(e.getClass().getName()+": "+e.getMessage());
+          System.exit(0);
+       }
+	      
       System.out.println("AMOUNT WITHDRAWN  SUCCESSFULLY");
       
 	}
 	static public void deleteAccount(int id) throws Exception{
 		Connection c = null;
 	      Statement stmt = null;
+	      try {
 		 Class.forName("org.postgresql.Driver");
    c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
    c.setAutoCommit(false);
@@ -214,7 +231,11 @@ public class SqlDataAccess {
    s1.executeUpdate();
    c.commit();
    stmt.close();
-   c.close();	
+   c.close();	} catch (Exception e) {
+       e.printStackTrace();
+       System.err.println(e.getClass().getName()+": "+e.getMessage());
+       System.exit(0);
+    }
    System.out.println("ACCOUNT DELETED SUCCESSFULLY");
 	}
 	static public void transferAccount(int id1,int id2,int amt) throws Exception{
@@ -224,6 +245,7 @@ public class SqlDataAccess {
 		String m=String.valueOf(formatter.format(date)); 
 		  Connection c = null;
 	      Statement stmt = null;
+	      try {
 		  Class.forName("org.postgresql.Driver");
      c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
      c.setAutoCommit(false);
@@ -300,7 +322,11 @@ public class SqlDataAccess {
       rs.close();
       stmt.close();
       c.commit();
-      c.close();
+      c.close(); } catch (Exception e) {
+          e.printStackTrace();
+          System.err.println(e.getClass().getName()+": "+e.getMessage());
+          System.exit(0);
+       }
       System.out.println("AMOUNT TRANSFERED SUCCESSFULLY");
 	}
 	static void menu() {
@@ -319,6 +345,7 @@ public class SqlDataAccess {
 		Scanner sc=new Scanner(System.in);
 		  Connection c = null;
 	      Statement stmt = null;
+	      try {
 		  Class.forName("org.postgresql.Driver");
      c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
      c.setAutoCommit(false);
@@ -427,7 +454,11 @@ public class SqlDataAccess {
 			 }
 		}while(opt!=0);
 		
-        
+	      } catch (Exception e) {
+	          e.printStackTrace();
+	          System.err.println(e.getClass().getName()+": "+e.getMessage());
+	          System.exit(0);
+	       }
        
 	}
 	public static void main(String[] args) throws Exception{
