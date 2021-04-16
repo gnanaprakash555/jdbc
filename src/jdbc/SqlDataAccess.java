@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 
 public class SqlDataAccess {
+	static long k;
 	static String name;
 	static int age;
 	static String dob;
@@ -19,6 +20,7 @@ public class SqlDataAccess {
 	static String ifsc;
 	static String a_ifsc;
 	static String pass;
+	static long t_id;
 	static long amount=0;
 	static public void display(int a_id) throws Exception
 	{
@@ -140,8 +142,8 @@ public class SqlDataAccess {
             s.setLong(1,amount);
             s.setInt(2,a_id);  
             s.executeUpdate();
-            System.out.println("deposited successfully");
-           String sql = "INSERT INTO transaction1(accounts_id,amount,type,date)VALUES (?,?,?,?)";
+         
+           String sql = "INSERT INTO transaction_history(accounts_id,amount,type,date)VALUES (?,?,?,?)";
             
 	        PreparedStatement pt=c.prepareStatement(sql);
       		  pt.setInt(1,a_id);
@@ -157,7 +159,7 @@ public class SqlDataAccess {
       	 }
       	 
       }
-      
+   
       rs.close();
       stmt.close();
 	      c.commit();
@@ -190,7 +192,7 @@ public class SqlDataAccess {
             s.setLong(1,amount);
             s.setInt(2,a_id);  
             s.executeUpdate();
-            String sql = "INSERT INTO transaction1(accounts_id,amount,type,date)VALUES (?,?,?,?)";
+            String sql = "INSERT INTO transaction_history(accounts_id,amount,type,date)VALUES (?,?,?,?)";
 	        PreparedStatement pt=c.prepareStatement(sql);
       		  pt.setInt(1,a_id);
       		  pt.setLong(2,amt);
@@ -215,22 +217,34 @@ public class SqlDataAccess {
 	static public void deleteAccount(int id) throws Exception{
 		Connection c = null;
 	      Statement stmt = null;
+	      ResultSet rs=null;
 	      try {
 		 Class.forName("org.postgresql.Driver");
    c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
    c.setAutoCommit(false);
    stmt = c.createStatement();
-   PreparedStatement s=c.prepareStatement("delete from transaction2 where accounts_id = ?");  
-   s.setLong(1,id);
+    rs = stmt.executeQuery( "SELECT * FROM transaction_history;" );
+   while ( rs.next() ) {
+   	 int a_id = rs.getInt("accounts_id");
+   	 if(a_id==id)
+   	 {
+  int t_id=rs.getInt("transfer_id");
+   		 PreparedStatement s=c.prepareStatement("delete from transfer_transactions where fetch_id = ?");  
+   	   s.setLong(1,t_id);
+   	   s.executeUpdate();	 
+   	 }
+   	 }
+   
    PreparedStatement s1=c.prepareStatement("delete from accounts where id = ?");  
    s1.setLong(1,id);
-   PreparedStatement s2=c.prepareStatement("delete from transaction1 where accounts_id = ?");  
+   PreparedStatement s2=c.prepareStatement("delete from transaction_history where accounts_id = ?");  
    s2.setLong(1,id);
-   s.executeUpdate();
+   
    s2.executeUpdate();
    s1.executeUpdate();
-   c.commit();
+   rs.close();
    stmt.close();
+   c.commit();
    c.close();	} catch (Exception e) {
        e.printStackTrace();
        System.err.println(e.getClass().getName()+": "+e.getMessage());
@@ -244,67 +258,113 @@ public class SqlDataAccess {
 		Date date = new Date();
 		String m=String.valueOf(formatter.format(date)); 
 		  Connection c = null;
-	      Statement stmt = null;
+	      
+	      Statement st1 = null; 
+	      Statement st2 = null; 
+	      Statement st3 = null; 
+	      Statement st4= null; 
+	      
+	      ResultSet rs1=null;
+	      ResultSet rs2=null;
+	      ResultSet rs3=null;
+	      ResultSet rs4=null;
 	      try {
 		  Class.forName("org.postgresql.Driver");
      c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
      c.setAutoCommit(false);
-     stmt = c.createStatement();
-     ResultSet rs = stmt.executeQuery( "SELECT * FROM accounts;" );
-      while ( rs.next() ) {
-    	  int id = rs.getInt("id");
+     st1 = c.createStatement();
+     st2 = c.createStatement();
+     st3 = c.createStatement();
+     st4 = c.createStatement();
+      rs4 = st4.executeQuery( "SELECT * FROM accounts;" );
+      while ( rs4.next() ) {
+    	  int id = rs4.getInt("id");
     	  if(id==id2) {
-    		  ifsc  = rs.getString("ifsc");
+    		  ifsc  = rs4.getString("ifsc");
     		  break;
     	  }
       }
-      System.out.println(ifsc);
+     
+      
+      rs1 = st1.executeQuery( "SELECT * FROM accounts;" );
       do {
     	  System.out.println("ENTER IFSC FOR " +id2);
     	   a_ifsc=sc.next();
       if(a_ifsc.equals(ifsc))
       {
     	  
-    	  ResultSet rs1 = stmt.executeQuery( "SELECT * FROM accounts;" );
+    	  
       while ( rs1.next() ) {
       	 int id = rs1.getInt("id");
-      	
+      	 
       	 if(id==id1||id==id2)
       	 {
+      		System.out.println(id);
       		 if(id==id1) {
       			 amount=rs1.getLong("amount")-amt;
+      			
       			PreparedStatement s=c.prepareStatement("update accounts set amount=? where id=?");  
                 s.setLong(1,amount);
                 s.setInt(2,id1);  
                 s.executeUpdate();
-                String sql = "INSERT INTO transaction2(accounts_id,amount,date,to_id,from_id,type,status)VALUES (?,?,?,?,?,?,?)";
+                String sql = "INSERT INTO transaction_history(accounts_id,amount,type,date)VALUES (?,?,?,?)";
                 PreparedStatement pt=c.prepareStatement(sql);
                 pt.setInt(1,id1);
         		  pt.setLong(2,amt);
-        		  pt.setString(3,m);
-        		  pt.setInt(4,id2);
-        		  pt.setInt(5,id1);
-        		  pt.setString(6,"tranfer");
-        		  pt.setString(7,"debited");
-        		pt.executeUpdate();
+        		  pt.setString(3,"transfer");
+        		  pt.setString(4,m);
+        		 pt.executeUpdate();
+        		 
+        		  rs2 = st2.executeQuery( "SELECT * FROM transaction_history;" );
+        	      while ( rs2.next() ) {
+        	       	 int a_id = rs2.getInt("accounts_id");
+        	       	 if(a_id==id1) {
+        	       		 k=rs2.getLong("transfer_id");
+        	       		 
+        	       	 }
+        	       	
+        	       	 }
+        	   
+        	      PreparedStatement pt1=c.prepareStatement( "INSERT INTO transfer_transactions(fetch_id,from_id,to_id,status)VALUES (?,?,?,?)");
+        	      pt1.setLong(1, k);
+        	      pt1.setInt(2, id1);
+        	      pt1.setInt(3, id2);
+        	      pt1.setString(4,"debited");
+        	      pt1.executeUpdate();
+         		
       		 }
       		 else
       		 {
       			 amount=rs1.getLong("amount")+amt;
-       			PreparedStatement s=c.prepareStatement("update accounts set amount=? where id=?");  
-                 s.setLong(1,amount);
-                 s.setInt(2,id2);  
-                 s.executeUpdate();
-                 String sql = "INSERT INTO transaction2(accounts_id,amount,date,to_id,from_id,type,status)VALUES (?,?,?,?,?,?,?)";
-                 PreparedStatement pt=c.prepareStatement(sql);
-                 pt.setInt(1,id2);
-         		  pt.setLong(2,amt);
-         		  pt.setString(3,m);
-         		  pt.setInt(4,id2);
-         		  pt.setInt(5,id1);
-         		  pt.setString(6,"tranfer");
-         		  pt.setString(7,"credited");
-         		pt.executeUpdate();
+      			
+       			PreparedStatement s1=c.prepareStatement("update accounts set amount=? where id=?");  
+                 s1.setLong(1,amount);
+                 s1.setInt(2,id2);  
+                 s1.executeUpdate();
+                 String sql = "INSERT INTO transaction_history(accounts_id,amount,type,date)VALUES (?,?,?,?)";
+                 PreparedStatement p=c.prepareStatement(sql);
+                 p.setInt(1,id2);
+         		  p.setLong(2,amt);
+         		  p.setString(3,"transfer");
+         		  p.setString(4,m);
+         		 p.executeUpdate();
+         		 rs3 =st3 .executeQuery( "SELECT * FROM transaction_history;" );
+       	      while ( rs3.next() ) {
+       	       	 int a_id = rs3.getInt("accounts_id");
+       	       	 if(a_id==id2) {
+       	       		 k=rs3.getLong("transfer_id");
+       	       		 
+       	       	 }
+       	       	
+       	       	 }
+       	  
+       	      PreparedStatement p1=c.prepareStatement( "INSERT INTO transfer_transactions(fetch_id,from_id,to_id,status)VALUES (?,?,?,?)");
+       	      p1.setLong(1, k);
+       	      p1.setInt(2, id1);
+       	      p1.setInt(3, id2);
+       	      p1.setString(4,"credited");
+       	      p1.executeUpdate();
+        		
       		 }
       		
       	 }
@@ -319,8 +379,14 @@ public class SqlDataAccess {
       }
       while(a_ifsc.equals(ifsc)==false);
      
-      rs.close();
-      stmt.close();
+     rs1.close();
+     rs2.close();
+     rs3.close();
+     rs4.close();
+      st1.close();
+      st2.close();
+      st3.close();
+      st4.close();
       c.commit();
       c.close(); } catch (Exception e) {
           e.printStackTrace();
@@ -461,9 +527,165 @@ public class SqlDataAccess {
 	       }
        
 	}
+	public static void menu1() {
+		System.out.println(" PRESS 1 FOR DEPOSIT HISTRY");
+		System.out.println(" PRESS 2 FOR WITHDRAWN HISTRY");
+		System.out.println(" PRESS 3 FOR TRANSFER HISTRY");
+		System.out.println(" PRESS 4 FOR TOTAL HISTRY");
+		System.out.println(" PRESS 5 FOR EXIT");
+
+		}
+	static public void transactionHistory(int a_id) {
+		Scanner sc=new Scanner(System.in);
+		  Connection c = null;
+	      Statement stmt1 = null;
+	      Statement stmt2 = null;
+	      ResultSet rs1=null;
+	      ResultSet rs2=null;
+	      try {
+		  Class.forName("org.postgresql.Driver");
+   c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/gnanaprakash", "postgres", "root");  
+   c.setAutoCommit(false);
+   stmt1 = c.createStatement();
+   stmt2 = c.createStatement();
+		int opt;
+		do {
+			menu1();
+			 opt=sc.nextInt();
+			 
+			 switch(opt)
+			 {
+			 case 1:
+				 rs1 = stmt1.executeQuery( "SELECT * FROM transaction_history;" );
+			      while ( rs1.next() ) {
+			    	  int id = rs1.getInt("accounts_id");
+			    	  String type=rs1.getString("type");
+			    	  
+			    	  if(id==a_id&&type.equals("deposit")) {
+			    		  amount=rs1.getLong("amount");
+			    		String  date=rs1.getString("date");
+			    		
+	                System.out.println(amount);
+	                System.out.println(date);
+	                System.out.println(type);
+	                
+			    	  }
+			    	  }
+	                break;
+			case 2:
+				 rs1 = stmt1.executeQuery( "SELECT * FROM transaction_history;" );
+			      while ( rs1.next() ) {
+			    	  int id = rs1.getInt("accounts_id");
+			    	  String type=rs1.getString("type");
+			    	  
+			    	  if(id==a_id&&type.equals("withdraw")) {
+			    		  amount=rs1.getLong("amount");
+			    		String  date=rs1.getString("date");
+			    		
+	                System.out.println(amount);
+	                System.out.println(date);
+	                System.out.println(type);
+	               
+			    	  }
+			    	  }
+			      break;
+			 case 3:
+				 rs1 = stmt1.executeQuery( "SELECT * FROM transaction_history;" );
+			      while ( rs1.next() ) {
+			    	  int id = rs1.getInt("accounts_id");
+			    	  String type=rs1.getString("type");
+			    	  
+			    	  if(id==a_id&&type.equals("transfer")) {
+			    		  amount=rs1.getLong("amount");
+			    		String  date=rs1.getString("date");
+			    		t_id=rs1.getLong("transfer_id");
+	                System.out.println("AMOUNT:"+amount);
+	                System.out.println("DATE:"+date);
+	                System.out.println("TYPE:"+type);
+	                PreparedStatement s3=c.prepareStatement("SELECT * FROM transfer_transactions where fetch_id=?");
+				      s3.setLong(1,t_id);
+				      rs2=s3.executeQuery();
+				      while ( rs2.next() ) {
+				    	  
+				    	  String status=rs2.getString("status");
+				      int to_id=rs2.getInt("to_id");
+				      int from_id=rs2.getInt("from_id");
+				      System.out.println("FROM_ID:"+from_id);
+				      System.out.println("TO_ID:" +to_id);
+				      System.out.println("STATUS:"+status);
+				     
+				      }
+			    	  }
+			    	  }
+			      
+			  
+			      c.close();
+	                break;
+			 case 4:
+				 rs1 = stmt1.executeQuery( "SELECT * FROM transaction_history;" );
+			      while ( rs1.next() ) {
+			    	  int id = rs1.getInt("accounts_id");
+			    	  
+			    	  if(id==a_id) {
+			    		  String type=rs1.getString("type");
+			    		  if(type.equals("deposit")||type.equals("withdraw"))
+			    		  {
+			    			  amount=rs1.getLong("amount");
+					    		String  date=rs1.getString("date");
+					    		
+			                System.out.println("AMOUNT:"+amount);
+			                System.out.println("DATE:"+date);
+			                System.out.println("TYPE:"+type);
+			                
+			    		  }
+			    		  else {
+			    			  amount=rs1.getLong("amount");
+					    		String  date=rs1.getString("date");
+					    		t_id=rs1.getLong("transfer_id");
+			                System.out.println("AMOUNT:"+amount);
+			                System.out.println("DATE:"+date);
+			                System.out.println("TYPE:"+type);
+			                PreparedStatement s3=c.prepareStatement("SELECT * FROM transfer_transactions where fetch_id=?");
+						      s3.setLong(1,t_id);
+						      rs2=s3.executeQuery();
+						      while ( rs2.next() ) {
+						    	  
+						    	  String status=rs2.getString("status");
+						      int to_id=rs2.getInt("to_id");
+						      int from_id=rs2.getInt("from_id");
+						      System.out.println("FROM_ID:"+from_id);
+						      System.out.println("TO_ID:" +to_id);
+						      System.out.println("STATUS:"+status);
+						     
+			    		  }
+			      }
+			 }
+			      }
+			      rs2.close();
+				 break;
+			 case 5:System.out.println("THANK YOU");
+			          rs1.close();
+			          
+			          stmt1.close();
+			          stmt2.close();
+			         c.commit();
+			         c.close();
+			         System.exit(0);
+			         break;
+			 }
+		}while(opt!=0);
+		
+		} catch (Exception e) {
+	          e.printStackTrace();
+	          System.err.println(e.getClass().getName()+": "+e.getMessage());
+	          System.exit(0);
+	       }
+	}
+
+	
 	public static void main(String[] args) throws Exception{
 		
-	deposit(3,10);
+transactionHistory(4);
 	}
 
 }
